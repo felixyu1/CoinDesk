@@ -48,7 +48,7 @@ public class CoinController {
     }
 
     @DeleteMapping("/coinDesc/{code}")
-    public ResponseEntity<?> deleteCoinDesc(@PathVariable String code) {
+    public ResponseEntity<?> deleteCoinDesc(@PathVariable String code) throws Exception {
         coinService.deleteCoinDesc(code);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

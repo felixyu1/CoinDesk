@@ -1,5 +1,6 @@
 package com.cathaybk.coindesk.service;
 
+import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.cathaybk.coindesk.model.BpisPojo;
 import com.cathaybk.coindesk.model.CoinDesc;
 

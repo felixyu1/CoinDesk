@@ -1,6 +1,8 @@
 package com.cathaybk.coindesk.controller;
 
 import com.cathaybk.coindesk.dto.CoinDescDto;
+import com.cathaybk.coindesk.exception.CoinDescFoundException;
+import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,28 @@ class CoinControllerTest {
                 .andExpect(status().is(201));
     }
 
+    @Transactional
+    @Test
+    void createCoinDesc_createDuplicated() throws Exception{
+
+        CoinDescDto coinDescDto = new CoinDescDto();
+        coinDescDto.setCode("JPY");
+        coinDescDto.setZhtwDesc("日圓");
+
+        String json = objectMapper.writeValueAsString(coinDescDto);
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .post("/coinDesc")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException()
+                                instanceof CoinDescFoundException));
+    }
+
     @Test
     void getCoinDesc_success() throws Exception {
 
@@ -58,12 +82,15 @@ class CoinControllerTest {
     }
 
     @Test
-    void getCoinDesc_notFound() throws Exception {
+    void getCoinDesc_notFound() throws Exception{
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .get("/coinDesc/{code}", "XXX");
 
         mockMvc.perform(requestBuilder)
-                .andExpect(status().is(404));
+                .andExpect(status().isNotFound())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException()
+                                instanceof CoinDescNotFoundException));
     }
 
     @Transactional
@@ -87,6 +114,28 @@ class CoinControllerTest {
 
     @Transactional
     @Test
+    void updateCoinDesc_updateNonExisting() throws Exception {
+
+        CoinDescDto coinDescDto = new CoinDescDto();
+        coinDescDto.setCode("ZZZ");
+        coinDescDto.setZhtwDesc("金圓");
+
+        String json = objectMapper.writeValueAsString(coinDescDto);
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .put("/coinDesc/{code}", "ZZZ")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isNotFound())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException()
+                                instanceof CoinDescNotFoundException));
+    }
+
+    @Transactional
+    @Test
     void deleteCoinDesc_success() throws Exception {
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .delete("/coinDesc/{code}", "JPY");
@@ -97,12 +146,15 @@ class CoinControllerTest {
 
     @Transactional
     @Test
-    public void deleteCoinDesc_deleteNonExisting() throws Exception {
+    void deleteCoinDesc_deleteNonExisting() throws Exception {
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .delete("/coinDesc/{code}", "ZZZ");
 
         mockMvc.perform(requestBuilder)
-                .andExpect(status().is(204));
+                .andExpect(status().isNotFound())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException()
+                                instanceof CoinDescNotFoundException));
     }
 
     @Test

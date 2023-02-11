@@ -1,5 +1,7 @@
 package com.cathaybk.coindesk.exception.handler;
 
+import com.cathaybk.coindesk.controller.CoinController;
+import com.cathaybk.coindesk.exception.CoinDescFoundException;
 import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.cathaybk.coindesk.exception.JsonToPojoException;
 import org.springframework.http.HttpStatus;
@@ -14,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@ControllerAdvice("com.cathaybk.coindesk.controller.CoinController")
+@ControllerAdvice(assignableTypes = {CoinController.class})
 public class CoinControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(RestClientException.class)
@@ -28,12 +30,19 @@ public class CoinControllerAdvisor extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(CoinDescNotFoundException.class)
-    public ResponseEntity<Object> handle(CoinDescNotFoundException coinDescNotFoundException,
-                                         WebRequest request){
+    public ResponseEntity<Object> handle(CoinDescNotFoundException coinDescNotFoundException){
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("message", "CoinDescNotFoundException:"+ coinDescNotFoundException.getMessage());
 
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CoinDescFoundException.class)
+    public ResponseEntity<Object> handle(CoinDescFoundException coinDescFoundException){
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", "CoinDescFoundException:"+ coinDescFoundException.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(JsonToPojoException.class)

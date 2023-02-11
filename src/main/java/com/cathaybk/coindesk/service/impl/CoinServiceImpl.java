@@ -2,6 +2,7 @@ package com.cathaybk.coindesk.service.impl;
 
 
 import com.cathaybk.coindesk.dao.CoinDescDao;
+import com.cathaybk.coindesk.exception.CoinDescFoundException;
 import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.cathaybk.coindesk.exception.JsonToPojoException;
 import com.cathaybk.coindesk.model.BpiPojo;
@@ -30,28 +31,35 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public void createCoinDesc(CoinDesc coinDesc) throws RuntimeException {
-        coinDescDao.save(coinDesc);
+
+        CoinDesc c = coinDescDao.findById(coinDesc.getCode()).orElse(null);
+
+        if(c == null) {
+            coinDescDao.save(coinDesc);
+        }else{
+            throw new CoinDescFoundException(coinDesc.getCode());
+        }
     }
 
     @Override
     public void updateCoinDesc(String code, CoinDesc coinDesc)
             throws RuntimeException {
-        CoinDesc c = coinDescDao.findById(code).orElse(null);
+
+        CoinDesc c = getCoinDesc(code);
+
         if(c != null){
             coinDescDao.save(coinDesc);
-        }else{
-            throw new CoinDescNotFoundException(code);
         }
     }
 
     @Override
     public void deleteCoinDesc(String code)
             throws RuntimeException{
-        CoinDesc c = coinDescDao.findById(code).orElse(null);
+
+        CoinDesc c = getCoinDesc(code);
+
         if(c != null) {
             coinDescDao.deleteById(code);
-        }else{
-            throw new CoinDescNotFoundException(code);
         }
     }
 
@@ -67,8 +75,10 @@ public class CoinServiceImpl implements CoinService {
     }
 
     @Override
-    public CoinDesc getCoinDesc(String code) throws RuntimeException {
+    public CoinDesc getCoinDesc(String code) throws RuntimeException{
+
         CoinDesc coinDesc = coinDescDao.findById(code).orElse(null);
+
         if(coinDesc != null) {
             return coinDesc;
         }else{
