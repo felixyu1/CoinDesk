@@ -6,22 +6,28 @@ import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureRestDocs(outputDir = "target/snippets")
 @AutoConfigureMockMvc
 class CoinControllerTest {
     @Autowired
@@ -44,7 +50,12 @@ class CoinControllerTest {
                 .content(json);
 
         mockMvc.perform(requestBuilder)
-                .andExpect(status().is(201));
+                .andExpect(status().is(201))
+                .andDo(document("coinDesc/createCoinDesc",
+                        requestFields(
+                                fieldWithPath("code").description("幣別代號"),
+                                fieldWithPath("zhtwDesc").description("幣別中文"))
+                ));
     }
 
     @Transactional
@@ -72,18 +83,27 @@ class CoinControllerTest {
     @Test
     void getCoinDesc_success() throws Exception {
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
+//        RequestBuilder requestBuilder = MockMvcRequestBuilders
+//                .get("/coinDesc/{code}", "JPY");
+        RequestBuilder requestBuilder = RestDocumentationRequestBuilders
                 .get("/coinDesc/{code}", "JPY");
 
         mockMvc.perform(requestBuilder)
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.zhtwDesc", equalTo("日圓")));
+                .andExpect(jsonPath("$.zhtwDesc", equalTo("日圓")))
+                .andDo(document("coinDesc/getCoinDescByCode",
+                        pathParameters(
+                                parameterWithName("code").description("幣別代號")),
+                        responseFields(
+                                fieldWithPath("code").description("幣別代號"),
+                                fieldWithPath("zhtwDesc").description("幣別中文"))
+                ));
     }
 
     @Test
     void getCoinDesc_notFound() throws Exception{
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
+        RequestBuilder requestBuilder = RestDocumentationRequestBuilders
                 .get("/coinDesc/{code}", "XXX");
 
         mockMvc.perform(requestBuilder)
@@ -103,13 +123,20 @@ class CoinControllerTest {
 
         String json = objectMapper.writeValueAsString(coinDescDto);
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
+        RequestBuilder requestBuilder = RestDocumentationRequestBuilders
                 .put("/coinDesc/{code}", "JPY")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json);
 
         mockMvc.perform(requestBuilder)
-                .andExpect(status().is(200));
+                .andExpect(status().is(200))
+                .andDo(document("coinDesc/updateCoinDesc",
+                        pathParameters(
+                                parameterWithName("code").description("幣別代號")),
+                        requestFields(
+                                fieldWithPath("code").description("幣別代號"),
+                                fieldWithPath("zhtwDesc").description("幣別中文"))
+                ));
     }
 
     @Transactional
@@ -137,11 +164,15 @@ class CoinControllerTest {
     @Transactional
     @Test
     void deleteCoinDesc_success() throws Exception {
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
+        RequestBuilder requestBuilder = RestDocumentationRequestBuilders
                 .delete("/coinDesc/{code}", "JPY");
 
         mockMvc.perform(requestBuilder)
-                .andExpect(status().is(204));
+                .andExpect(status().is(204))
+                .andDo(document("coinDesc/deleteCoinDescByCode",
+                        pathParameters(
+                                parameterWithName("code").description("幣別代號"))
+                ));
     }
 
     @Transactional
@@ -165,6 +196,13 @@ class CoinControllerTest {
         mockMvc.perform(requestBuilder)
                 .andDo(print())
                 .andExpect(status().isOk())
-                ;
+                .andDo(document("bpis",
+                        responseFields(
+                        fieldWithPath("updatedDateTime").description("Coin Desk BPI更新日期時間"),
+                        fieldWithPath("bpis[].code").description("幣別代號"),
+                        fieldWithPath("bpis[].description").description("幣別英文"),
+                        fieldWithPath("bpis[].zhtwDesc").description("幣別中文"),
+                        fieldWithPath("bpis[].exchangeRate").description("BitCoin匯率"))
+                ));
     }
 }
