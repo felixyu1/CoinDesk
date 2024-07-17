@@ -8,7 +8,7 @@ public class BitCoinPriceIndexDto extends AbstractDto{
     private String code;
     @NotBlank
     private Float exchangeRate;
-
+//
     private String description;
     private String zhtwDesc;
 
