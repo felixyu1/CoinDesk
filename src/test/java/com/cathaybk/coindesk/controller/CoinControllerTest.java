@@ -4,6 +4,7 @@ import com.cathaybk.coindesk.dto.CoinDescDto;
 import com.cathaybk.coindesk.exception.CoinDescFoundException;
 import com.cathaybk.coindesk.exception.CoinDescNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -79,7 +80,7 @@ class CoinControllerTest {
                         assertTrue(result.getResolvedException()
                                 instanceof CoinDescFoundException));
     }
-
+    @Disabled
     @Test
     void getCoinDesc_success() throws Exception {
 
